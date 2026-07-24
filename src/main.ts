@@ -4,14 +4,29 @@ import {
   DocumentBuilder,
   SwaggerModule,
 } from '@nestjs/swagger';
+import {
+  MicroserviceOptions,
+  Transport,
+} from '@nestjs/microservices';
 
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
 
 async function bootstrap() {
-
   const app = await NestFactory.create(AppModule);
+
+  // RabbitMQ Microservice
+  app.connectMicroservice<MicroserviceOptions>({
+    transport: Transport.RMQ,
+    options: {
+      urls: ['amqp://guest:guest@localhost:5672'],
+      queue: 'finbank_queue',
+      queueOptions: {
+        durable: true,
+      },
+    },
+  });
 
   app.use(helmet());
 
@@ -45,13 +60,14 @@ async function bootstrap() {
     document,
   );
 
-  await app.listen(
-    process.env.PORT || 3000,
-  );
+  // Start RabbitMQ Consumer
+  await app.startAllMicroservices();
 
-  console.log(
-    `Server running on http://localhost:3000`,
-  );
+  // Start HTTP Server
+  await app.listen(process.env.PORT || 3000);
+
+  console.log(`🚀 Server running on http://localhost:3000`);
+  console.log(`🐇 RabbitMQ consumer connected`);
 }
 
 bootstrap();
