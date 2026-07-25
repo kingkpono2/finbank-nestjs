@@ -14,7 +14,7 @@ import { PaymentsModule } from './payments/payments.module';
 import { SmsModule } from './sms/sms.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { AuditModule } from './audit/audit.module';
-import { AppCacheModule } from './cache/cache.module';
+import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -46,7 +46,7 @@ import { AppCacheModule } from './cache/cache.module';
     SmsModule,
     WebhooksModule,
     AuditModule,
-    AppCacheModule,
+    RedisModule,
   ],
 })
 export class AppModule {}
