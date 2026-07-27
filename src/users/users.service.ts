@@ -24,9 +24,11 @@ export class UsersService {
   }
 
   async findById(id: string) {
-    return this.repository.findOne({
-      where: { id },
-    });
+    return this.repository
+      .createQueryBuilder('user')
+      .addSelect('user.refreshToken')
+      .where('user.id = :id', { id })
+      .getOne();
   }
 
  

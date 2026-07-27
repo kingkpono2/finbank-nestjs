@@ -1,0 +1,56 @@
+services:
+  finbank-api:
+    build: .
+    container_name: almond-finbank-api
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      PORT: 3000
+      API_PREFIX: finbank-api
+      DATABASE_HOST: finbank-postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: postgres
+      DATABASE_PASSWORD: postgres
+      DATABASE_NAME: finbank
+      REDIS_HOST: finbank-redis
+      REDIS_PORT: 6379
+      RABBITMQ_URL: amqp://guest:guest@finbank-rabbitmq:5672
+    depends_on:
+      - finbank-postgres
+      - finbank-redis
+      - finbank-rabbitmq
+    ports:
+      - "127.0.0.1:18300:3000"
+
+  finbank-postgres:
+    image: postgres:16
+    container_name: almond-finbank-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: finbank
+    volumes:
+      - finbank_postgres_data:/var/lib/postgresql/data
+
+  finbank-redis:
+    image: redis:7
+    container_name: almond-finbank-redis
+    restart: unless-stopped
+    volumes:
+      - finbank_redis_data:/data
+
+  finbank-rabbitmq:
+    image: rabbitmq:3-management
+    container_name: almond-finbank-rabbitmq
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:18672:15672"
+    volumes:
+      - finbank_rabbitmq_data:/var/lib/rabbitmq
+
+volumes:
+  finbank_postgres_data:
+  finbank_redis_data:
+  finbank_rabbitmq_data:

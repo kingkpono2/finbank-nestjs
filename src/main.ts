@@ -20,7 +20,7 @@ async function bootstrap() {
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
-      urls: ['amqp://guest:guest@localhost:5672'],
+      urls: [process.env.RABBITMQ_URL || 'amqp://guest:guest@localhost:5672'],
       queue: 'finbank_queue',
       queueOptions: {
         durable: true,
@@ -32,7 +32,8 @@ async function bootstrap() {
 
   app.enableCors();
 
-  app.setGlobalPrefix('api');
+  const apiPrefix = process.env.API_PREFIX || 'api';
+  app.setGlobalPrefix(apiPrefix);
 
   app.useGlobalPipes(
     new ValidationPipe({
@@ -43,7 +44,7 @@ async function bootstrap() {
   );
 
   const config = new DocumentBuilder()
-    .setTitle('FinBank Pro API')
+    .setTitle('Almond FinBank Pro API')
     .setDescription('Production Banking API')
     .setVersion('1.0')
     .addBearerAuth()
@@ -55,7 +56,7 @@ async function bootstrap() {
   );
 
   SwaggerModule.setup(
-    'docs',
+    `${apiPrefix}/docs`,
     app,
     document,
   );

@@ -7,16 +7,18 @@ import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
 import { UsersModule } from '../users/users.module';
+import { EventsModule } from '../events/events.module';
 
 @Module({
   imports: [
     UsersModule,
+    EventsModule,
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'super-secret-finbank-key',
       signOptions: {
-       expiresIn: '15m' as const,   
-         },
+        expiresIn: '15m' as const,
+      },
     }),
   ],
   controllers: [AuthController],

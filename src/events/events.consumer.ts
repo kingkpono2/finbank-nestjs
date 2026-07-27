@@ -15,18 +15,28 @@ export class EventsConsumer {
   async handleTransferCompleted(@Payload() payload: any) {
     console.log('RabbitMQ Event:', payload);
 
-    await this.notificationsService.sendTransferReceipt(
-      payload.email,
-      payload.amount,
-      payload.reference,
-    );
+    try {
+      await this.notificationsService.sendTransferReceipt(
+        payload.email,
+        payload.amount,
+        payload.reference,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Transfer email failed:', message);
+    }
 
-    await this.smsService.send(
-      payload.phone,
-      `Debit Alert
-Amount: ₦${payload.amount}
+    try {
+      await this.smsService.send(
+        payload.phone,
+        `Debit Alert
+Amount: NGN ${payload.amount}
 Ref: ${payload.reference}`,
-    );
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Transfer SMS failed:', message);
+    }
   }
 
   @EventPattern('transfer.failed')
@@ -38,6 +48,26 @@ Ref: ${payload.reference}`,
   async handleUserRegistered(@Payload() payload: any) {
     console.log('New User:', payload);
 
-    // Optional welcome email
+    try {
+      await this.notificationsService.sendWelcomeEmail(
+        payload.email,
+        payload.firstName,
+      );
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Welcome email failed:', message);
+    }
+
+    if (payload.phone) {
+      try {
+        await this.smsService.send(
+          payload.phone,
+          `Welcome to Almond FinBank, ${payload.firstName}.`,
+        );
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error('Welcome SMS failed:', message);
+      }
+    }
   }
 }

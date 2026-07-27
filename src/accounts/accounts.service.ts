@@ -25,7 +25,7 @@ private generateAccountNumber(): string {
 async findByAccountNumber(accountNumber: string) {
   const key = `account:${accountNumber}`;
 
-const cached = this.redisService.get<Account>(key)
+const cached = await this.redisService.get<Account>(key)
 
 if (cached) {
     console.log('Redis Cache HIT');
