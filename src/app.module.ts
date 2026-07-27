@@ -16,6 +16,8 @@ import { WebhooksModule } from './webhooks/webhooks.module';
 import { AuditModule } from './audit/audit.module';
 import { RedisModule } from './redis/redis.module';
 
+const isTypeOrmSyncEnabled = process.env.TYPEORM_SYNC === 'true';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -31,7 +33,8 @@ import { RedisModule } from './redis/redis.module';
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
-      synchronize: true,
+      synchronize: isTypeOrmSyncEnabled,
+      logging: process.env.TYPEORM_LOGGING === 'true' ? ['error', 'warn'] : ['error'],
     }),
 
     UsersModule,

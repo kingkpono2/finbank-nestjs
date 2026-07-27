@@ -4,6 +4,7 @@ import {
   Column,
   ManyToOne,
   CreateDateColumn,
+  Index,
 } from 'typeorm';
 
 import { Account } from '../../accounts/entities/account.entity';
@@ -13,6 +14,8 @@ export enum EntryType {
   CREDIT = 'CREDIT',
 }
 
+@Index('idx_ledger_reference', ['reference'])
+@Index('idx_ledger_account_created_at', ['account', 'createdAt'])
 @Entity()
 export class LedgerEntry {
   @PrimaryGeneratedColumn('uuid')

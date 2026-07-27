@@ -28,7 +28,25 @@ async function bootstrap() {
     },
   });
 
-  app.use(helmet());
+  app.use(
+    helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          baseUri: ["'self'"],
+          fontSrc: ["'self'", 'https:', 'data:'],
+          formAction: ["'self'"],
+          frameAncestors: ["'self'"],
+          imgSrc: ["'self'", 'data:'],
+          objectSrc: ["'none'"],
+          scriptSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrcAttr: ["'unsafe-inline'"],
+          styleSrc: ["'self'", 'https:', "'unsafe-inline'"],
+          upgradeInsecureRequests: [],
+        },
+      },
+    }),
+  );
 
   app.enableCors();
 
@@ -129,12 +147,14 @@ async function bootstrap() {
         toAccount: { type: 'string', example: 'replace-with-destination-accountNumber' },
         amount: { type: 'number', minimum: 1, example: 2500 },
         narration: { type: 'string', example: 'Live Swagger demo transfer' },
+        idempotencyKey: { type: 'string', example: 'demo-transfer-20260727-001' },
       },
       example: {
         fromAccount: 'replace-with-source-accountNumber',
         toAccount: 'replace-with-destination-accountNumber',
         amount: 2500,
         narration: 'Live Swagger demo transfer',
+        idempotencyKey: 'demo-transfer-20260727-001',
       },
     },
     [`/${apiPrefix}/mock/sms`]: {
