@@ -23,6 +23,12 @@ export class UsersService {
     });
   }
 
+  async findByPhone(phone: string) {
+    return this.repository.findOne({
+      where: { phone },
+    });
+  }
+
   async findById(id: string) {
     return this.repository
       .createQueryBuilder('user')

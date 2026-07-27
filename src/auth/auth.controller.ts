@@ -23,12 +23,11 @@ export class AuthController {
     type: RegisterDto,
     examples: {
       customer: {
-        summary: 'Register a demo customer',
+        summary: 'Register a demo customer with a unique email',
         value: {
           firstName: 'Kpono-Abasi',
           lastName: 'Akpabio',
-          email: 'kingkpono@gmail.com',
-          phone: '+2348011112299',
+          email: 'change-me+001@finbank.test',
           password: 'Password1',
         },
       },

@@ -76,15 +76,14 @@ async function bootstrap() {
       properties: {
         firstName: { type: 'string', example: 'Kpono-Abasi' },
         lastName: { type: 'string', example: 'Akpabio' },
-        email: { type: 'string', example: 'kingkpono+finbankdemo@gmail.com' },
-        phone: { type: 'string', example: '+2348011112299' },
+        email: { type: 'string', example: 'change-me+001@finbank.test' },
+        phone: { type: 'string', example: '+2348011112201' },
         password: { type: 'string', example: 'Password1', minLength: 8 },
       },
       example: {
         firstName: 'Kpono-Abasi',
         lastName: 'Akpabio',
-        email: 'kingkpono+finbankdemo@gmail.com',
-        phone: '+2348011112299',
+        email: 'change-me+001@finbank.test',
         password: 'Password1',
       },
     },

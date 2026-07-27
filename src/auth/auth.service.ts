@@ -50,15 +50,43 @@ export class AuthService {
       throw new ConflictException('Email already exists');
     }
 
+    const phone = dto.phone?.trim() || undefined;
+
+    if (phone) {
+      const existingPhone = await this.usersService.findByPhone(phone);
+
+      if (existingPhone) {
+        throw new ConflictException('Phone already exists');
+      }
+    }
+
     const hashedPassword = await bcrypt.hash(dto.password, 10);
 
-    const createdUser = await this.usersService.create({
-      firstName: dto.firstName.trim(),
-      lastName: dto.lastName.trim(),
-      email,
-      phone: dto.phone?.trim(),
-      password: hashedPassword,
-    });
+    let createdUser;
+
+    try {
+      createdUser = await this.usersService.create({
+        firstName: dto.firstName.trim(),
+        lastName: dto.lastName.trim(),
+        email,
+        phone,
+        password: hashedPassword,
+      });
+    } catch (error: any) {
+      if (error?.code === '23505') {
+        if (String(error?.detail ?? '').includes('phone')) {
+          throw new ConflictException('Phone already exists');
+        }
+
+        if (String(error?.detail ?? '').includes('email')) {
+          throw new ConflictException('Email already exists');
+        }
+
+        throw new ConflictException('User already exists');
+      }
+
+      throw error;
+    }
 
     try {
       await this.eventsService.publishUserRegistered({
