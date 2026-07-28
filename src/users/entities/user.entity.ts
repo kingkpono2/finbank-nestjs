@@ -23,8 +23,6 @@ export class User {
   @Column()
   lastName: string;
 
- 
- 
   @Column({
     unique: true,
   })
@@ -35,7 +33,6 @@ export class User {
     nullable: true,
   })
   phone: string;
-
 
   @Column()
   password: string;
@@ -59,10 +56,9 @@ export class User {
   updatedAt: Date;
 
   @Column({
-  type: 'text',
-  nullable: true,
-  select: false,
-})
-refreshToken: string | null;
+    type: 'text',
+    nullable: true,
+    select: false,
+  })
+  refreshToken: string | null;
 }
-

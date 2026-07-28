@@ -2,21 +2,14 @@ import { Controller, Get } from '@nestjs/common';
 
 @Controller('health')
 export class HealthController {
+  @Get()
+  health() {
+    return {
+      status: 'UP',
 
-@Get()
+      application: 'FinBank Pro',
 
-health(){
-
-return{
-
-status:'UP',
-
-application:'FinBank Pro',
-
-timestamp:new Date(),
-
-};
-
-}
-
+      timestamp: new Date(),
+    };
+  }
 }

@@ -40,10 +40,13 @@ export class TransactionsService {
   }
 
   async transfer(req: any, dto: TransferDto) {
+    const correlationId = req.correlationId;
     const idempotencyKey = dto.idempotencyKey?.trim();
 
     if (dto.fromAccount === dto.toAccount) {
-      throw new BadRequestException('Sender and receiver accounts must be different');
+      throw new BadRequestException(
+        'Sender and receiver accounts must be different',
+      );
     }
 
     if (idempotencyKey) {
@@ -75,16 +78,20 @@ export class TransactionsService {
         .getRepository(Account)
         .createQueryBuilder('account')
         .setLock('pessimistic_write')
-        .where('account.accountNumber IN (:...accountNumbers)', { accountNumbers })
+        .where('account.accountNumber IN (:...accountNumbers)', {
+          accountNumbers,
+        })
         .orderBy('account.accountNumber', 'ASC')
         .getMany();
 
-      sender = lockedAccounts.find(
-        (account) => account.accountNumber === dto.fromAccount,
-      ) ?? null;
-      receiver = lockedAccounts.find(
-        (account) => account.accountNumber === dto.toAccount,
-      ) ?? null;
+      sender =
+        lockedAccounts.find(
+          (account) => account.accountNumber === dto.fromAccount,
+        ) ?? null;
+      receiver =
+        lockedAccounts.find(
+          (account) => account.accountNumber === dto.toAccount,
+        ) ?? null;
 
       if (!sender) {
         throw new NotFoundException('Sender account not found');
@@ -156,7 +163,7 @@ export class TransactionsService {
 
     const senderWithOwner = await this.accountsRepository.findOne({
       where: {
-        id: sender!.id,
+        id: sender.id,
       },
       relations: {
         owner: true,
@@ -167,12 +174,13 @@ export class TransactionsService {
       await this.eventsService.publishTransferCompleted({
         reference,
         amount: dto.amount,
-        fromAccount: sender!.accountNumber,
-        toAccount: receiver!.accountNumber,
+        fromAccount: sender.accountNumber,
+        toAccount: receiver.accountNumber,
         email: senderWithOwner?.owner?.email,
         phone: (senderWithOwner?.owner as any)?.phone,
         narration: dto.narration,
         timestamp: new Date(),
+        correlationId,
       });
 
       console.log('Transfer event published successfully.');
@@ -189,6 +197,7 @@ export class TransactionsService {
         entityId: reference,
         ipAddress: req.ip,
         userAgent: req.headers['user-agent'],
+        correlationId,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

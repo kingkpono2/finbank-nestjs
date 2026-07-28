@@ -1,18 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { SmsService } from './sms.service';
 
 describe('SmsService', () => {
-  let service: SmsService;
+  it('queues SMS through the mock provider by default', async () => {
+    delete process.env.SMS_PROVIDER;
+    const service = new SmsService();
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [SmsService],
-    }).compile();
-
-    service = module.get<SmsService>(SmsService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    await expect(
+      service.send('+2348012345678', 'hello', 'corr-1'),
+    ).resolves.toMatchObject({
+      status: 'QUEUED',
+      provider: 'MOCK',
+      correlationId: 'corr-1',
+    });
   });
 });

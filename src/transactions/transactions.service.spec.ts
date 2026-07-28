@@ -1,18 +1,16 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { TransactionsService } from './transactions.service';
 
 describe('TransactionsService', () => {
-  let service: TransactionsService;
+  it('is constructed with transaction, account, ledger, event, audit, and redis dependencies', () => {
+    const service = new TransactionsService(
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+      {} as any,
+    );
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [TransactionsService],
-    }).compile();
-
-    service = module.get<TransactionsService>(TransactionsService);
-  });
-
-  it('should be defined', () => {
     expect(service).toBeDefined();
   });
 });

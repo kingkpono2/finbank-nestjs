@@ -1,18 +1,15 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { AuditService } from './audit.service';
 
 describe('AuditService', () => {
-  let service: AuditService;
+  it('persists audit log data', async () => {
+    const repo = { save: jest.fn(async (data) => data) };
+    const service = new AuditService(repo as any);
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [AuditService],
-    }).compile();
-
-    service = module.get<AuditService>(AuditService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    await expect(
+      service.log({ action: 'TRANSFER', correlationId: 'corr-1' } as any),
+    ).resolves.toEqual({
+      action: 'TRANSFER',
+      correlationId: 'corr-1',
+    });
   });
 });

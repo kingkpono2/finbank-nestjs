@@ -20,7 +20,9 @@ import { NotificationLog } from './entities/notification.entity';
         const auth = user && pass ? { user, pass } : undefined;
         const from =
           config.get<string>('SMTP_FROM') ||
-          (user ? `Almond FinBank <${user}>` : 'Almond FinBank <no-reply@almondsystems.com.ng>');
+          (user
+            ? `Almond FinBank <${user}>`
+            : 'Almond FinBank <no-reply@almondsystems.com.ng>');
 
         return {
           transport: {

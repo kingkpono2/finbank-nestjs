@@ -1,8 +1,4 @@
-import {
-  Inject,
-  Injectable,
-  OnModuleDestroy,
-} from '@nestjs/common';
+import { Inject, Injectable, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
 
 import { REDIS_CLIENT } from './redis.constants';
@@ -24,17 +20,17 @@ export class RedisService implements OnModuleDestroy {
     return JSON.parse(value) as T;
   }
 
-  async set(
+  async set(key: string, value: unknown, ttlSeconds = 60): Promise<void> {
+    await this.client.set(key, JSON.stringify(value), 'EX', ttlSeconds);
+  }
+
+  async setIfNotExists(
     key: string,
-    value: unknown,
-    ttlSeconds = 60,
-  ): Promise<void> {
-    await this.client.set(
-      key,
-      JSON.stringify(value),
-      'EX',
-      ttlSeconds,
-    );
+    value: string,
+    ttlSeconds: number,
+  ): Promise<boolean> {
+    const result = await this.client.set(key, value, 'EX', ttlSeconds, 'NX');
+    return result === 'OK';
   }
 
   async del(key: string): Promise<void> {

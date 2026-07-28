@@ -31,6 +31,9 @@ export class AuditLog {
   @Column()
   userAgent: string;
 
+  @Column({ nullable: true })
+  correlationId?: string;
+
   @CreateDateColumn()
   createdAt: Date;
 }

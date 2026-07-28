@@ -1,18 +1,18 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { UsersService } from './users.service';
 
 describe('UsersService', () => {
-  let service: UsersService;
+  it('creates a user through the repository', async () => {
+    const repository = {
+      create: jest.fn((data) => data),
+      save: jest.fn(async (data) => ({ id: 'user-1', ...data })),
+    };
+    const service = new UsersService(repository as any);
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [UsersService],
-    }).compile();
-
-    service = module.get<UsersService>(UsersService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    await expect(
+      service.create({ email: 'demo@finbank.test' } as any),
+    ).resolves.toEqual({
+      id: 'user-1',
+      email: 'demo@finbank.test',
+    });
   });
 });

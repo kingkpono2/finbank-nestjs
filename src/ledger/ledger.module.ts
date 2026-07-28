@@ -5,14 +5,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { LedgerEntry } from './entities/ledger-entry.entity';
 
 @Module({
- imports:[
-    TypeOrmModule.forFeature([LedgerEntry]),
-],
-exports:[
-    LedgerService,
-    TypeOrmModule,
-],
+  imports: [TypeOrmModule.forFeature([LedgerEntry])],
+  exports: [LedgerService, TypeOrmModule],
   providers: [LedgerService],
-  controllers: [LedgerController]
+  controllers: [LedgerController],
 })
 export class LedgerModule {}

@@ -1,37 +1,38 @@
 import {
-Entity,
-PrimaryGeneratedColumn,
-Column,
-CreateDateColumn,
-} from "typeorm";
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+} from 'typeorm';
 
 @Entity()
-export class NotificationLog{
+export class NotificationLog {
+  @PrimaryGeneratedColumn('uuid')
+  id: string;
 
-@PrimaryGeneratedColumn("uuid")
-id:string;
+  @Column()
+  channel: string;
 
-@Column()
-channel:string;
+  @Column()
+  recipient: string;
 
-@Column()
-recipient:string;
+  @Column()
+  subject: string;
 
-@Column()
-subject:string;
+  @Column({
+    type: 'text',
+  })
+  body: string;
 
-@Column({
-type:"text",
-})
-body:string;
+  @Column()
+  status: string;
 
-@Column()
-status:string;
+  @Column()
+  provider: string;
 
-@Column()
-provider:string;
+  @Column({ nullable: true })
+  correlationId?: string;
 
-@CreateDateColumn()
-createdAt:Date;
-
+  @CreateDateColumn()
+  createdAt: Date;
 }

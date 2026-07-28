@@ -2,25 +2,13 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class PaymentsService {
+  transfer() {
+    const statuses = ['SUCCESS', 'FAILED', 'PENDING'];
 
-  transfer(){
+    return {
+      gatewayReference: 'FLW-' + Date.now(),
 
-    const statuses=[
-      "SUCCESS",
-      "FAILED",
-      "PENDING",
-    ];
-
-    return{
-
-      gatewayReference:
-      "FLW-"+Date.now(),
-
-      status:
-      statuses[Math.floor(Math.random()*3)],
-
+      status: statuses[Math.floor(Math.random() * 3)],
     };
-
   }
-
 }

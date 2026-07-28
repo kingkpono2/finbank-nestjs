@@ -37,14 +37,9 @@ export class UsersService {
       .getOne();
   }
 
- 
-
-async updateRefreshToken(
-    id:string,
-    refreshToken:string|null,
-){
-    await this.repository.update(id,{
-        refreshToken,
+  async updateRefreshToken(id: string, refreshToken: string | null) {
+    await this.repository.update(id, {
+      refreshToken,
     });
-}
+  }
 }

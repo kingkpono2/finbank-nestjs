@@ -1,18 +1,31 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { NotificationsService } from './notifications.service';
 
 describe('NotificationsService', () => {
-  let service: NotificationsService;
+  it('sends welcome email through SMTP and logs success with correlation id', async () => {
+    const repo = { save: jest.fn(async (data) => data) };
+    const mailer = {
+      sendMail: jest
+        .fn()
+        .mockResolvedValue({ accepted: ['demo@finbank.test'] }),
+    };
+    const config = { get: jest.fn().mockReturnValue(undefined) };
+    const service = new NotificationsService(
+      repo as any,
+      mailer as any,
+      config as any,
+    );
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [NotificationsService],
-    }).compile();
+    await service.sendWelcomeEmail(
+      'demo@finbank.test',
+      'Kpono-Abasi',
+      'corr-1',
+    );
 
-    service = module.get<NotificationsService>(NotificationsService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(mailer.sendMail).toHaveBeenCalledWith(
+      expect.objectContaining({ to: 'demo@finbank.test' }),
+    );
+    expect(repo.save).toHaveBeenCalledWith(
+      expect.objectContaining({ status: 'SUCCESS', correlationId: 'corr-1' }),
+    );
   });
 });

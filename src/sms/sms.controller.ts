@@ -17,6 +17,6 @@ export class SmsController {
     },
   })
   send(@Body() body: any) {
-    return this.smsService.send(body.phone, body.message);
+    return this.smsService.send(body.phone, body.message, body.correlationId);
   }
 }

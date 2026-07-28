@@ -2,7 +2,6 @@ import { Inject, Injectable } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 
-
 @Injectable()
 export class EventsService {
   constructor(
@@ -21,6 +20,4 @@ export class EventsService {
   async publishUserRegistered(payload: any) {
     return firstValueFrom(this.client.emit('user.registered', payload));
   }
-
-  
 }

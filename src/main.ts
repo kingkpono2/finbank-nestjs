@@ -1,22 +1,17 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
-import {
-  DocumentBuilder,
-  SwaggerModule,
-} from '@nestjs/swagger';
-import {
-  MicroserviceOptions,
-  Transport,
-} from '@nestjs/microservices';
+import { randomUUID } from 'crypto';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { MicroserviceOptions, Transport } from '@nestjs/microservices';
 
 import helmet from 'helmet';
 
 import { AppModule } from './app.module';
+import { MetricsService } from './metrics/metrics.service';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // RabbitMQ Microservice
   app.connectMicroservice<MicroserviceOptions>({
     transport: Transport.RMQ,
     options: {
@@ -50,6 +45,34 @@ async function bootstrap() {
 
   app.enableCors();
 
+  app.use((req: any, res: any, next: any) => {
+    const correlationId = req.headers['x-correlation-id'] || randomUUID();
+    req.correlationId = Array.isArray(correlationId)
+      ? correlationId[0]
+      : correlationId;
+    res.setHeader('x-correlation-id', req.correlationId);
+    next();
+  });
+
+  const metricsService = app.get(MetricsService);
+  app.use((req: any, res: any, next: any) => {
+    const startedAt = Date.now();
+    res.on('finish', () => {
+      const labels = {
+        method: req.method,
+        route: req.route?.path || req.path,
+        status: res.statusCode,
+      };
+      metricsService.increment('finbank_http_requests_total', labels);
+      metricsService.observe(
+        'finbank_http_requests_total',
+        Date.now() - startedAt,
+        labels,
+      );
+    });
+    next();
+  });
+
   const apiPrefix = process.env.API_PREFIX || 'api';
   app.setGlobalPrefix(apiPrefix);
 
@@ -62,14 +85,20 @@ async function bootstrap() {
   );
 
   app.use(`/${apiPrefix}/docs-json`, (_req, res, next) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate',
+    );
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     next();
   });
 
   app.use(`/${apiPrefix}/docs`, (_req, res, next) => {
-    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader(
+      'Cache-Control',
+      'no-store, no-cache, must-revalidate, proxy-revalidate',
+    );
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
     next();
@@ -82,10 +111,7 @@ async function bootstrap() {
     .addBearerAuth()
     .build();
 
-  const document = SwaggerModule.createDocument(
-    app,
-    config,
-  );
+  const document = SwaggerModule.createDocument(app, config);
 
   const demoPayloadSchemas: Record<string, any> = {
     [`/${apiPrefix}/auth/register`]: {
@@ -102,6 +128,7 @@ async function bootstrap() {
         firstName: 'Kpono-Abasi',
         lastName: 'Akpabio',
         email: 'change-me+001@finbank.test',
+        phone: '+2348011112201',
         password: 'Password1',
       },
     },
@@ -109,11 +136,11 @@ async function bootstrap() {
       type: 'object',
       required: ['email', 'password'],
       properties: {
-        email: { type: 'string', example: 'kingkpono@gmail.com' },
+        email: { type: 'string', example: 'change-me+001@finbank.test' },
         password: { type: 'string', example: 'Password1' },
       },
       example: {
-        email: 'kingkpono@gmail.com',
+        email: 'change-me+001@finbank.test',
         password: 'Password1',
       },
     },
@@ -121,7 +148,10 @@ async function bootstrap() {
       type: 'object',
       required: ['refreshToken'],
       properties: {
-        refreshToken: { type: 'string', example: 'paste-refresh-token-from-login-response' },
+        refreshToken: {
+          type: 'string',
+          example: 'paste-refresh-token-from-login-response',
+        },
       },
       example: {
         refreshToken: 'paste-refresh-token-from-login-response',
@@ -131,7 +161,11 @@ async function bootstrap() {
       type: 'object',
       required: ['type'],
       properties: {
-        type: { type: 'string', enum: ['SAVINGS', 'CURRENT'], example: 'SAVINGS' },
+        type: {
+          type: 'string',
+          enum: ['SAVINGS', 'CURRENT'],
+          example: 'SAVINGS',
+        },
         initialBalance: { type: 'number', minimum: 0, example: 50000 },
       },
       example: {
@@ -143,11 +177,20 @@ async function bootstrap() {
       type: 'object',
       required: ['fromAccount', 'toAccount', 'amount', 'narration'],
       properties: {
-        fromAccount: { type: 'string', example: 'replace-with-source-accountNumber' },
-        toAccount: { type: 'string', example: 'replace-with-destination-accountNumber' },
+        fromAccount: {
+          type: 'string',
+          example: 'replace-with-source-accountNumber',
+        },
+        toAccount: {
+          type: 'string',
+          example: 'replace-with-destination-accountNumber',
+        },
         amount: { type: 'number', minimum: 1, example: 2500 },
         narration: { type: 'string', example: 'Live Swagger demo transfer' },
-        idempotencyKey: { type: 'string', example: 'demo-transfer-20260727-001' },
+        idempotencyKey: {
+          type: 'string',
+          example: 'demo-transfer-20260727-001',
+        },
       },
       example: {
         fromAccount: 'replace-with-source-accountNumber',
@@ -162,20 +205,37 @@ async function bootstrap() {
       required: ['phone', 'message'],
       properties: {
         phone: { type: 'string', example: '+2348011112299' },
-        message: { type: 'string', example: 'Your Almond FinBank demo transfer of NGN 2,500.00 was successful.' },
+        message: {
+          type: 'string',
+          example:
+            'Your Almond FinBank demo transfer of NGN 2,500.00 was successful.',
+        },
+        correlationId: { type: 'string', example: 'swagger-correlation-001' },
       },
       example: {
         phone: '+2348011112299',
-        message: 'Your Almond FinBank demo transfer of NGN 2,500.00 was successful.',
+        message:
+          'Your Almond FinBank demo transfer of NGN 2,500.00 was successful.',
+        correlationId: 'swagger-correlation-001',
       },
     },
     [`/${apiPrefix}/webhooks/payment`]: {
       type: 'object',
-      required: ['provider', 'reference', 'accountNumber', 'amount', 'currency', 'status'],
+      required: [
+        'provider',
+        'reference',
+        'accountNumber',
+        'amount',
+        'currency',
+        'status',
+      ],
       properties: {
         provider: { type: 'string', example: 'flutterwave' },
         reference: { type: 'string', example: 'FLW-DEMO-20260727-001' },
-        accountNumber: { type: 'string', example: 'replace-with-accountNumber' },
+        accountNumber: {
+          type: 'string',
+          example: 'replace-with-accountNumber',
+        },
         amount: { type: 'number', example: 25000 },
         currency: { type: 'string', example: 'NGN' },
         status: { type: 'string', example: 'SUCCESS' },
@@ -211,8 +271,10 @@ async function bootstrap() {
   }
 
   const noBodyExamples: Record<string, string> = {
-    [`/${apiPrefix}/auth/logout`]: 'Send with Bearer token. No JSON body required.',
-    [`/${apiPrefix}/mock/payments/transfer`]: 'No JSON body required. Returns a random mock gateway status.',
+    [`/${apiPrefix}/auth/logout`]:
+      'Send with Bearer token. No JSON body required.',
+    [`/${apiPrefix}/mock/payments/transfer`]:
+      'No JSON body required. Returns a random mock gateway status.',
   };
 
   for (const [path, description] of Object.entries(noBodyExamples)) {
@@ -235,56 +297,85 @@ async function bootstrap() {
     }
   }
 
-  const getExamples: Record<string, { description: string; parameters?: Record<string, string> }> = {
+  const getExamples: Record<
+    string,
+    { description: string; parameters?: Record<string, string> }
+  > = {
     [`/${apiPrefix}/health`]: {
       description: 'Health check endpoint. No JSON payload required.',
     },
+    [`/${apiPrefix}/metrics`]: {
+      description:
+        'Prometheus-style application metrics. No JSON payload required.',
+    },
     [`/${apiPrefix}/accounts`]: {
-      description: 'List accounts for the authenticated user. Send only the Bearer token; no JSON payload required.',
+      description:
+        'List accounts for the authenticated user. Send only the Bearer token; no JSON payload required.',
     },
     [`/${apiPrefix}/mock/name-enquiry`]: {
-      description: 'Demo name enquiry. Use query parameters, not a JSON body.',
+      description:
+        'Legacy demo name enquiry. Use query parameters, not a JSON body.',
       parameters: {
         accountNumber: '20583521311',
         bankCode: '044',
       },
     },
+    [`/${apiPrefix}/nibss/name-enquiry`]: {
+      description:
+        'NIBSS-style name enquiry mock. Use query parameters, not a JSON body.',
+      parameters: {
+        accountNumber: '0123456789',
+        bankCode: '044',
+      },
+    },
+    [`/${apiPrefix}/reconciliation/daily`]: {
+      description:
+        'Admin/support daily reconciliation summary. Send Bearer token for ADMIN or SUPPORT.',
+      parameters: {
+        date: '2026-07-27',
+      },
+    },
+    [`/${apiPrefix}/settlements/daily`]: {
+      description:
+        'Admin/support daily settlement summary. Send Bearer token for ADMIN or SUPPORT.',
+      parameters: {
+        date: '2026-07-27',
+      },
+    },
+    [`/${apiPrefix}/admin/dashboard`]: {
+      description:
+        'Admin-only operational dashboard endpoint. Send Bearer token for ADMIN.',
+    },
   };
 
-  for (const [path, config] of Object.entries(getExamples)) {
-    const operation = (document.paths[path]?.get ?? document.paths[path]?.post) as any;
+  for (const [path, routeConfig] of Object.entries(getExamples)) {
+    const operation = (document.paths[path]?.get ??
+      document.paths[path]?.post) as any;
     if (operation) {
-      operation.description = config.description;
-      if (operation.parameters && config.parameters) {
+      operation.description = routeConfig.description;
+      if (operation.parameters && routeConfig.parameters) {
         operation.parameters = operation.parameters.map((parameter: any) => ({
           ...parameter,
-          example: config.parameters?.[parameter.name] ?? parameter.example,
+          example:
+            routeConfig.parameters?.[parameter.name] ?? parameter.example,
           schema: {
             ...(parameter.schema ?? {}),
-            example: config.parameters?.[parameter.name] ?? parameter.schema?.example,
+            example:
+              routeConfig.parameters?.[parameter.name] ??
+              parameter.schema?.example,
           },
         }));
       }
     }
   }
 
-  SwaggerModule.setup(
-    `${apiPrefix}/docs`,
-    app,
-    document,
-    {
-      customJsStr: "\n(function () {\n  var examples = {\n    '/finbank-api/auth/register': {\n      firstName: 'Kpono-Abasi',\n      lastName: 'Akpabio',\n      email: 'kingkpono+finbankdemo@gmail.com',\n      phone: '+2348011112299',\n      password: 'Password1'\n    },\n    '/finbank-api/auth/login': {\n      email: 'kingkpono@gmail.com',\n      password: 'Password1'\n    },\n    '/finbank-api/auth/refresh': {\n      refreshToken: 'paste-refresh-token-from-login-response'\n    },\n    '/finbank-api/accounts': {\n      type: 'SAVINGS',\n      initialBalance: 50000\n    },\n    '/finbank-api/transactions/transfer': {\n      fromAccount: 'replace-with-source-accountNumber',\n      toAccount: 'replace-with-destination-accountNumber',\n      amount: 2500,\n      narration: 'Live Swagger demo transfer'\n    },\n    '/finbank-api/mock/sms': {\n      phone: '+2348011112299',\n      message: 'Your Almond FinBank demo transfer of NGN 2,500.00 was successful.'\n    },\n    '/finbank-api/webhooks/payment': {\n      provider: 'flutterwave',\n      reference: 'FLW-DEMO-20260727-001',\n      accountNumber: 'replace-with-accountNumber',\n      amount: 25000,\n      currency: 'NGN',\n      status: 'SUCCESS',\n      paidAt: '2026-07-27T12:00:00.000Z'\n    },\n    '/finbank-api/auth/logout': {},\n    '/finbank-api/mock/payments/transfer': {}\n  };\n\n  function pathFor(opblock) {\n    var pathNode = opblock.querySelector('.opblock-summary-path, .nostyle span');\n    return pathNode ? pathNode.textContent.trim() : '';\n  }\n\n  function setNativeValue(textarea, value) {\n    var setter = Object.getOwnPropertyDescriptor(window.HTMLTextAreaElement.prototype, 'value').set;\n    setter.call(textarea, value);\n    textarea.dispatchEvent(new Event('input', { bubbles: true }));\n    textarea.dispatchEvent(new Event('change', { bubbles: true }));\n  }\n\n  function fillEditors() {\n    document.querySelectorAll('.opblock').forEach(function (opblock) {\n      var path = pathFor(opblock);\n      var example = examples[path];\n      if (example === undefined) return;\n\n      opblock.querySelectorAll('textarea').forEach(function (textarea) {\n        var current = textarea.value.trim();\n        if (!current || current === '{}' || current === '{ }') {\n          setNativeValue(textarea, JSON.stringify(example, null, 2));\n        }\n      });\n    });\n  }\n\n  fillEditors();\n  setInterval(fillEditors, 700);\n  new MutationObserver(fillEditors).observe(document.body, { childList: true, subtree: true });\n})();\n",
-    },
-  );
+  SwaggerModule.setup(`${apiPrefix}/docs`, app, document);
 
-  // Start RabbitMQ Consumer
   await app.startAllMicroservices();
-
-  // Start HTTP Server
   await app.listen(process.env.PORT || 3000);
 
-  console.log(`🚀 Server running on http://localhost:3000`);
-  console.log(`🐇 RabbitMQ consumer connected`);
+  console.log('Server running on http://localhost:3000');
+  console.log('RabbitMQ consumer connected');
 }
 
 bootstrap();

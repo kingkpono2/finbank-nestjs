@@ -15,7 +15,7 @@ import { AuditModule } from 'src/audit/audit.module';
     AccountsModule,
     LedgerModule,
     EventsModule,
-    NotificationsModule, 
+    NotificationsModule,
     AuditModule,
   ],
   controllers: [TransactionsController],

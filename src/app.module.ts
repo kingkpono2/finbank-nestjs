@@ -15,6 +15,11 @@ import { SmsModule } from './sms/sms.module';
 import { WebhooksModule } from './webhooks/webhooks.module';
 import { AuditModule } from './audit/audit.module';
 import { RedisModule } from './redis/redis.module';
+import { AdminModule } from './admin/admin.module';
+import { MetricsModule } from './metrics/metrics.module';
+import { NibssModule } from './nibss/nibss.module';
+import { ReconciliationModule } from './reconciliation/reconciliation.module';
+import { SettlementsModule } from './settlements/settlements.module';
 
 const isTypeOrmSyncEnabled = process.env.TYPEORM_SYNC === 'true';
 
@@ -34,7 +39,8 @@ const isTypeOrmSyncEnabled = process.env.TYPEORM_SYNC === 'true';
       database: process.env.DATABASE_NAME,
       autoLoadEntities: true,
       synchronize: isTypeOrmSyncEnabled,
-      logging: process.env.TYPEORM_LOGGING === 'true' ? ['error', 'warn'] : ['error'],
+      logging:
+        process.env.TYPEORM_LOGGING === 'true' ? ['error', 'warn'] : ['error'],
     }),
 
     UsersModule,
@@ -50,6 +56,11 @@ const isTypeOrmSyncEnabled = process.env.TYPEORM_SYNC === 'true';
     WebhooksModule,
     AuditModule,
     RedisModule,
+    AdminModule,
+    MetricsModule,
+    NibssModule,
+    ReconciliationModule,
+    SettlementsModule,
   ],
 })
 export class AppModule {}

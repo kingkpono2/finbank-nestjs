@@ -9,7 +9,8 @@ export class PaymentsController {
 
   @Post('transfer')
   @ApiOperation({
-    summary: 'Simulate an external payment gateway transfer response. No request body required.',
+    summary:
+      'Simulate an external payment gateway transfer response. No request body required.',
   })
   transfer() {
     return this.paymentsService.transfer();

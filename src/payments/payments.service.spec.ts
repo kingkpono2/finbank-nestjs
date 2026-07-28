@@ -1,18 +1,11 @@
-import { Test, TestingModule } from '@nestjs/testing';
 import { PaymentsService } from './payments.service';
 
 describe('PaymentsService', () => {
-  let service: PaymentsService;
+  it('returns a mock gateway reference and allowed status', () => {
+    const service = new PaymentsService();
+    const result = service.transfer();
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      providers: [PaymentsService],
-    }).compile();
-
-    service = module.get<PaymentsService>(PaymentsService);
-  });
-
-  it('should be defined', () => {
-    expect(service).toBeDefined();
+    expect(result.gatewayReference).toMatch(/^FLW-/);
+    expect(['SUCCESS', 'FAILED', 'PENDING']).toContain(result.status);
   });
 });

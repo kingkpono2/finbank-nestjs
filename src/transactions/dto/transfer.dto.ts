@@ -1,5 +1,11 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import {
+  IsNumber,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 export class TransferDto {
   @ApiProperty({ example: '1000000001' })
@@ -21,7 +27,8 @@ export class TransferDto {
 
   @ApiPropertyOptional({
     example: 'demo-transfer-20260727-001',
-    description: 'Client-generated key used to safely retry a transfer request without creating a duplicate debit.',
+    description:
+      'Client-generated key used to safely retry a transfer request without creating a duplicate debit.',
     maxLength: 80,
   })
   @IsOptional()

@@ -102,7 +102,8 @@ export class AuthService {
       console.error('User registration event publish failed:', message);
     }
 
-    const { password, ...safeUser } = createdUser;
+    const safeUser = { ...createdUser };
+    delete safeUser.password;
 
     return safeUser;
   }

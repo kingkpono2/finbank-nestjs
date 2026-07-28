@@ -17,7 +17,8 @@ export class TransactionsController {
     examples: {
       transfer: {
         summary: 'Transfer between two demo accounts',
-        description: 'Create two accounts first, then replace the account numbers with the created accountNumber values.',
+        description:
+          'Create two accounts first, then replace the account numbers with the created accountNumber values.',
         value: {
           fromAccount: '20583521311',
           toAccount: '20883530386',

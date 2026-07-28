@@ -14,7 +14,11 @@ export class NotificationsService {
     private readonly config: ConfigService,
   ) {}
 
-  async sendWelcomeEmail(email: string, firstName: string) {
+  async sendWelcomeEmail(
+    email: string,
+    firstName: string,
+    correlationId?: string,
+  ) {
     const subject = 'Welcome to Almond FinBank';
     const html = `
       <h2>Welcome to Almond FinBank</h2>
@@ -27,10 +31,16 @@ export class NotificationsService {
       subject,
       html,
       successBody: 'User registration welcome email sent.',
+      correlationId,
     });
   }
 
-  async sendTransferReceipt(email: string, amount: number, reference: string) {
+  async sendTransferReceipt(
+    email: string,
+    amount: number,
+    reference: string,
+    correlationId?: string,
+  ) {
     const subject = 'Almond FinBank Transfer Receipt';
     const html = `
       <h2>Transfer Successful</h2>
@@ -45,6 +55,7 @@ export class NotificationsService {
       subject,
       html,
       successBody: `Transfer of NGN ${amount}. Reference: ${reference}`,
+      correlationId,
     });
   }
 
@@ -53,6 +64,7 @@ export class NotificationsService {
     subject: string;
     html: string;
     successBody: string;
+    correlationId?: string;
   }) {
     const brevoApiKey = this.config.get<string>('BREVO_API_KEY');
     const provider = brevoApiKey ? 'BREVO' : 'SMTP';
@@ -73,6 +85,7 @@ export class NotificationsService {
         body: params.successBody,
         status: 'SUCCESS',
         provider,
+        correlationId: params.correlationId,
       });
 
       return result;
@@ -86,6 +99,7 @@ export class NotificationsService {
         body: message,
         status: 'FAILED',
         provider,
+        correlationId: params.correlationId,
       });
 
       throw error;

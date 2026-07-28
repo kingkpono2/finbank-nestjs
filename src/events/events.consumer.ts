@@ -13,13 +13,14 @@ export class EventsConsumer {
 
   @EventPattern('transfer.completed')
   async handleTransferCompleted(@Payload() payload: any) {
-    console.log('RabbitMQ Event:', payload);
+    console.log('RabbitMQ Event:', JSON.stringify(payload));
 
     try {
       await this.notificationsService.sendTransferReceipt(
         payload.email,
         payload.amount,
         payload.reference,
+        payload.correlationId,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -29,9 +30,8 @@ export class EventsConsumer {
     try {
       await this.smsService.send(
         payload.phone,
-        `Debit Alert
-Amount: NGN ${payload.amount}
-Ref: ${payload.reference}`,
+        `Debit Alert\nAmount: NGN ${payload.amount}\nRef: ${payload.reference}`,
+        payload.correlationId,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -41,17 +41,18 @@ Ref: ${payload.reference}`,
 
   @EventPattern('transfer.failed')
   async handleTransferFailed(@Payload() payload: any) {
-    console.log('Transfer Failed:', payload);
+    console.log('Transfer Failed:', JSON.stringify(payload));
   }
 
   @EventPattern('user.registered')
   async handleUserRegistered(@Payload() payload: any) {
-    console.log('New User:', payload);
+    console.log('New User:', JSON.stringify(payload));
 
     try {
       await this.notificationsService.sendWelcomeEmail(
         payload.email,
         payload.firstName,
+        payload.correlationId,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -63,6 +64,7 @@ Ref: ${payload.reference}`,
         await this.smsService.send(
           payload.phone,
           `Welcome to Almond FinBank, ${payload.firstName}.`,
+          payload.correlationId,
         );
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
