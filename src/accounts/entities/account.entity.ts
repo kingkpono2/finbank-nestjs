@@ -3,6 +3,7 @@ import {
   PrimaryGeneratedColumn,
   Column,
   ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
   Index,
@@ -56,7 +57,11 @@ export class Account {
   })
   status: AccountStatus;
 
+  @Column({ type: 'uuid', nullable: true })
+  ownerId: string | null;
+
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'ownerId' })
   owner: User;
 
   @CreateDateColumn()

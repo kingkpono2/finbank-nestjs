@@ -15,6 +15,7 @@ import { TransferDto } from './dto/transfer.dto';
 import { EventsService } from 'src/events/events.service';
 import { AuditService } from 'src/audit/audit.service';
 import { RedisService } from 'src/redis/redis.service';
+import { ForbiddenException } from '@nestjs/common';
 
 @Injectable()
 export class TransactionsService {
@@ -99,6 +100,12 @@ export class TransactionsService {
 
       if (!receiver) {
         throw new NotFoundException('Receiver account not found');
+      }
+
+      if (sender.ownerId !== req.user.id) {
+        throw new ForbiddenException(
+          'You cannot debit an account you do not own',
+        );
       }
 
       if (sender.status !== AccountStatus.ACTIVE) {
